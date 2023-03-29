@@ -19,11 +19,11 @@ def pathInstance = buildFilePath(instanceDir, name + ".tif")
 def pathImage = buildFilePath(imageDir, name + ".tif")
 
 // Define how much to downsample during export
-double downsample = 1
+double downsample = 4
 
 // Create an ImageServer where the pixels are derived from annotations
 def semanticServer = new LabeledImageServer.Builder(imageData)
-  .backgroundLabel(0, ColorTools.WHITE) // Specify background label (usually 0 or 255)
+  .backgroundLabel(0, ColorTools.BLACK) // Specify background label (usually 0 or 255)
   .downsample(downsample)    // Choose server resolution; this should match the resolution at which tiles are exported
   .addLabel('Outer', 1)      // Choose output labels (the order matters!)
   .addLabel('Inner', 2)
