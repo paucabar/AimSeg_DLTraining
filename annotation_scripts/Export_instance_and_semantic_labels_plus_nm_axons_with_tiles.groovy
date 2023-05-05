@@ -1,5 +1,3 @@
-import java.util.stream.Collectors
-
 def imageData = getCurrentImageData()
 
 // Create output path (relative to project)
