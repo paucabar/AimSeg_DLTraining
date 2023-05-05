@@ -45,23 +45,17 @@ def region = RegionRequest.createInstance(server, downsample)
 
 // Get all bjects and filter them to keep only the Tiles
 def hierarchy = imageData.getHierarchy()
-def cls = PathObject.class
-def myClass = "Tile"
-Collection<PathObject> pathObjects = hierarchy.getObjects(null, cls)
+def tileObjects = getAnnotationObjects().findAll{it.getPathClass() == getPathClass("Tile")}
 
-pathTiles = pathObjects.stream()
-            .filter{object -> (object.getPathClass().toString()).equals(myClass)}
-            .collect(Collectors.toList())
-
-print(pathTiles.size())
+print(tileObjects.size())
 
 
 // Get image name to export annotations
 def name = GeneralTools.getNameWithoutExtension(imageData.getServer().getMetadata().getName())
 
 // Loop through tiles to write image regions
-if(pathTiles.size()>0) {
-    pathTiles.eachWithIndex{it,index->
+if(tileObjects.size()>0) {
+    tileObjects.eachWithIndex{it,index->
         roi = it.getROI() // get tile roi
         // Define export paths
         def pathSemantic = buildFilePath(semanticDir, name + "_t" + index.toString() + ".tif") // Define semantic output file paths
