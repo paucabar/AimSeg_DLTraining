@@ -53,25 +53,37 @@ pathTiles = pathObjects.stream()
             .filter{object -> (object.getPathClass().toString()).equals(myClass)}
             .collect(Collectors.toList())
 
-// Loop through tiles to write image regions
-def name = GeneralTools.getNameWithoutExtension(imageData.getServer().getMetadata().getName())
-pathTiles.eachWithIndex{it,index->
-    roi = it.getROI() // get tile roi
-    // Define export paths
-    def pathSemantic = buildFilePath(semanticDir, name + "_t" + index.toString() + ".tif") // Define semantic output file paths
-    def pathInstance = buildFilePath(instanceDir, name + "_t" + index.toString() + ".tif") // Define instance output file paths
-    def pathImage = buildFilePath(imageDir, name + "_t" + index.toString() + ".tif") // Define image output file path
-    // Get tile reguin from each server
-    def requestROISemantic = RegionRequest.createInstance(semanticServer.getPath(), 1, roi)
-    def requestROIInstance = RegionRequest.createInstance(instanceServer.getPath(), 1, roi)
-    def requestROIImage = RegionRequest.createInstance(server.getPath(), 1, roi)
-    // Write the images
-    writeImageRegion(semanticServer, requestROISemantic, pathSemantic)
-    writeImageRegion(instanceServer, requestROIInstance, pathInstance)
-    writeImageRegion(server, requestROIImage, pathImage)
-}
+print(pathTiles.size())
 
-// Write the images
-//writeImage(semanticServer, pathSemantic)
-//writeImage(instanceServer, pathInstance)
-//writeImageRegion(server, region, pathImage)
+
+// Get image name to export annotations
+def name = GeneralTools.getNameWithoutExtension(imageData.getServer().getMetadata().getName())
+
+// Loop through tiles to write image regions
+if(pathTiles.size()>0) {
+    pathTiles.eachWithIndex{it,index->
+        roi = it.getROI() // get tile roi
+        // Define export paths
+        def pathSemantic = buildFilePath(semanticDir, name + "_t" + index.toString() + ".tif") // Define semantic output file paths
+        def pathInstance = buildFilePath(instanceDir, name + "_t" + index.toString() + ".tif") // Define instance output file paths
+        def pathImage = buildFilePath(imageDir, name + "_t" + index.toString() + ".tif") // Define image output file path
+        // Get tile reguin from each server
+        def requestROISemantic = RegionRequest.createInstance(semanticServer.getPath(), 1, roi)
+        def requestROIInstance = RegionRequest.createInstance(instanceServer.getPath(), 1, roi)
+        def requestROIImage = RegionRequest.createInstance(server.getPath(), 1, roi)
+        // Write the images
+        writeImageRegion(semanticServer, requestROISemantic, pathSemantic)
+        writeImageRegion(instanceServer, requestROIInstance, pathInstance)
+        writeImageRegion(server, requestROIImage, pathImage)
+    }
+// Write full image if there are no tiles
+} else {
+    // Define export paths
+    def pathSemantic = buildFilePath(semanticDir, name + ".tif") // Define semantic output file paths
+    def pathInstance = buildFilePath(instanceDir, name + ".tif") // Define instance output file paths
+    def pathImage = buildFilePath(imageDir, name + ".tif") // Define image output file path
+    // Write the images
+    writeImage(semanticServer, pathSemantic)
+    writeImage(instanceServer, pathInstance)
+    writeImageRegion(server, region, pathImage)
+}
