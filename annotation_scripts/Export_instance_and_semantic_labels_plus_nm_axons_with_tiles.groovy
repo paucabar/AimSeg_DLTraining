@@ -50,7 +50,7 @@ def myClass = "Tile"
 Collection<PathObject> pathObjects = hierarchy.getObjects(null, cls)
 
 pathTiles = pathObjects.stream()
-            .filter{object -> (object.getPathClass() == null) || (object.getPathClass().toString().substring(0, myClass.size()).equals(myClass))}
+            .filter{object -> (object.getPathClass().toString()).equals(myClass)}
             .collect(Collectors.toList())
 
 // Loop through tiles to write image regions
