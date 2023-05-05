@@ -26,7 +26,18 @@ def semanticServer = new LabeledImageServer.Builder(imageData)
   .addLabel('Mitochondria', 5)
   .multichannelOutput(false) // If true, each label refers to the channel of a multichannel binary image (required for multiclass probability)
   .build()
-  
+
+// Fill the fibre instances
+def hierarchy = imageData.getHierarchy()
+def fibreObjects = hierarchy.getAnnotationObjects().findAll{it.getPathClass() == getPathClass("Outer")}
+for (f in fibreObjects){
+    roi = f.getROI()
+    filled_roi = RoiTools.fillHoles(roi)
+    f.setROI(filled_roi)
+}
+fireHierarchyUpdate()
+
+// Create an ImageServer for fibre instances
 def instanceServer = new LabeledImageServer.Builder(imageData)
   .backgroundLabel(0, ColorTools.BLACK) // Specify background label (usually 0 or 255)
   .downsample(downsample)    // Choose server resolution; this should match the resolution at which tiles are exported
@@ -41,9 +52,8 @@ def server = imageData.getServer()
 def region = RegionRequest.createInstance(server, downsample)
 
 
-// Get all bjects and filter them to keep only the Tiles
-def hierarchy = imageData.getHierarchy()
-def tileObjects = getAnnotationObjects().findAll{it.getPathClass() == getPathClass("Tile")}
+// Get all annotation objects and keep only the Tiles
+def tileObjects = hierarchy.getAnnotationObjects().findAll{it.getPathClass() == getPathClass("Tile")}
 
 print(tileObjects.size())
 
