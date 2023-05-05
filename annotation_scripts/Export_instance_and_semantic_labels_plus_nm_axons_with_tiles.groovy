@@ -1,3 +1,5 @@
+import java.util.stream.Collectors
+
 def imageData = getCurrentImageData()
 
 // Create output path (relative to project)
@@ -12,12 +14,6 @@ mkdirs(instanceDir)
 def imageDir = buildFilePath(outputDir, 'image')
 mkdirs(imageDir)
 
-// Define output file paths
-def name = GeneralTools.getNameWithoutExtension(imageData.getServer().getMetadata().getName())
-def pathSemantic = buildFilePath(semanticDir, name + ".tif")
-def pathInstance = buildFilePath(instanceDir, name + ".tif")
-def pathImage = buildFilePath(imageDir, name + ".tif")
-
 // Define how much to downsample during export
 double downsample = 2
 
@@ -29,6 +25,7 @@ def semanticServer = new LabeledImageServer.Builder(imageData)
   .addLabel('Inner', 2)
   .addLabel('Axon', 3)
   .addLabel('AxonNM', 4)
+  .addLabel('Mitochondria', 5)
   .multichannelOutput(false) // If true, each label refers to the channel of a multichannel binary image (required for multiclass probability)
   .build()
   
@@ -45,7 +42,36 @@ def instanceServer = new LabeledImageServer.Builder(imageData)
 def server = imageData.getServer()
 def region = RegionRequest.createInstance(server, downsample)
 
+
+// Get all bjects and filter them to keep only the Tiles
+def hierarchy = imageData.getHierarchy()
+def cls = PathObject.class
+def myClass = "Tile"
+Collection<PathObject> pathObjects = hierarchy.getObjects(null, cls)
+
+pathTiles = pathObjects.stream()
+            .filter{object -> (object.getPathClass() == null) || (object.getPathClass().toString().substring(0, myClass.size()).equals(myClass))}
+            .collect(Collectors.toList())
+
+// Loop through tiles to write image regions
+def name = GeneralTools.getNameWithoutExtension(imageData.getServer().getMetadata().getName())
+pathTiles.eachWithIndex{it,index->
+    roi = it.getROI() // get tile roi
+    // Define export paths
+    def pathSemantic = buildFilePath(semanticDir, name + "_t" + index.toString() + ".tif") // Define semantic output file paths
+    def pathInstance = buildFilePath(instanceDir, name + "_t" + index.toString() + ".tif") // Define instance output file paths
+    def pathImage = buildFilePath(imageDir, name + "_t" + index.toString() + ".tif") // Define image output file path
+    // Get tile reguin from each server
+    def requestROISemantic = RegionRequest.createInstance(semanticServer.getPath(), 1, roi)
+    def requestROIInstance = RegionRequest.createInstance(instanceServer.getPath(), 1, roi)
+    def requestROIImage = RegionRequest.createInstance(server.getPath(), 1, roi)
+    // Write the images
+    writeImageRegion(semanticServer, requestROISemantic, pathSemantic)
+    writeImageRegion(instanceServer, requestROIInstance, pathInstance)
+    writeImageRegion(server, requestROIImage, pathImage)
+}
+
 // Write the images
-writeImage(semanticServer, pathSemantic)
-writeImage(instanceServer, pathInstance)
-writeImageRegion(server, region, pathImage)
+//writeImage(semanticServer, pathSemantic)
+//writeImage(instanceServer, pathInstance)
+//writeImageRegion(server, region, pathImage)
