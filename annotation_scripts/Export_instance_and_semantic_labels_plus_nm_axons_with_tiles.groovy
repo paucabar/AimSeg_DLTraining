@@ -29,13 +29,13 @@ def semanticServer = new LabeledImageServer.Builder(imageData)
 
 // Fill the fibre instances
 def hierarchy = imageData.getHierarchy()
-def fibreObjects = hierarchy.getAnnotationObjects().findAll{it.getPathClass() == getPathClass("Outer")}
-for (f in fibreObjects){
-    roi = f.getROI()
-    filled_roi = RoiTools.fillHoles(roi)
-    f.setROI(filled_roi)
-}
-fireHierarchyUpdate()
+//def fibreObjects = hierarchy.getAnnotationObjects().findAll{it.getPathClass() == getPathClass("Outer")}
+//for (f in fibreObjects){
+//    roi = f.getROI()
+//    filled_roi = RoiTools.fillHoles(roi)
+//    f.setROI(filled_roi)
+//}
+//fireHierarchyUpdate()
 
 // Create an ImageServer for fibre instances
 def instanceServer = new LabeledImageServer.Builder(imageData)
